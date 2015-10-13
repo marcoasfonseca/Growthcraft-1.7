@@ -4,6 +4,7 @@ import growthcraft.api.cellar.BrewRegistry;
 import growthcraft.api.cellar.CellarRegistry;
 import growthcraft.cellar.container.ContainerBrewKettle;
 import growthcraft.cellar.GrowthCraftCellar;
+import growthcraft.core.utils.ItemUtils;
 import growthcraft.core.utils.NBTHelper;
 
 import cpw.mods.fml.relauncher.Side;
@@ -20,6 +21,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -31,15 +33,158 @@ public class TileEntityBrewKettle extends TileEntity implements ISidedInventory,
 	protected int time;
 	protected boolean update;
 
-	private ItemStack[] invSlots = new ItemStack[2];
+	private ItemStack[] invSlots = new ItemStack[4];
 	private int maxCap = GrowthCraftCellar.getConfig().brewKettleMaxCap;
 	private int[] maxCaps = new int[] {maxCap, maxCap};
 	private CellarTank[] tank = new CellarTank[] {new CellarTank(this.maxCaps[0], this), new CellarTank(this.maxCaps[1], this)};
 	private String name;
+	private final int bucketTimeCap = 15;
+	private int bucketTime;
+
+	private ItemStack getInputBucket()
+	{
+		return invSlots[ContainerBrewKettle.SlotId.BUCKET_INPUT];
+	}
+
+	private void setInputBucket(ItemStack newStack)
+	{
+		invSlots[ContainerBrewKettle.SlotId.BUCKET_INPUT] = newStack;
+	}
+
+	private ItemStack getOutputBucket()
+	{
+		return invSlots[ContainerBrewKettle.SlotId.BUCKET_OUTPUT];
+	}
+
+	private void setOutputBucket(ItemStack newStack)
+	{
+		invSlots[ContainerBrewKettle.SlotId.BUCKET_OUTPUT] = newStack;
+	}
+
+	private void useInputBucket()
+	{
+		setInputBucket(ItemUtils.consumeStack(getInputBucket()));
+	}
+
+	private boolean mergeOutputBucket(ItemStack stack)
+	{
+		final ItemStack result = ItemUtils.mergeStacks(getOutputBucket(), stack);
+		if (result != null)
+		{
+			setOutputBucket(result);
+			return true;
+		}
+		return false;
+	}
+
+	private void rejectInputBucket()
+	{
+		final ItemStack item = getInputBucket();
+		final ItemStack ou = getOutputBucket();
+		if (ou == null || ou.isItemEqual(item))
+		{
+			setOutputBucket(getInputBucket());
+			setInputBucket((ItemStack)null);
+		}
+	}
+
+	private void fillContainerFromTank(int tankId)
+	{
+		final ItemStack itemStack = getInputBucket();
+		final ItemStack result = FluidContainerRegistry.fillFluidContainer(tank[tankId].getFluid(), itemStack);
+		if (result != null)
+		{
+			final int cap = FluidContainerRegistry.getContainerCapacity(result);
+			if (cap <= tank[tankId].getFluidAmount())
+			{
+				final FluidStack drained = tank[tankId].drain(cap, true);
+				if (drained != null && drained.amount > 0)
+				{
+					if (mergeOutputBucket(result))
+					{
+						useInputBucket();
+					}
+				}
+			}
+		}
+		else
+		{
+			rejectInputBucket();
+		}
+	}
+
+	private void drainContainerToTank(int tankId)
+	{
+		final CellarTank tnk = tank[tankId];
+		final ItemStack itemStack = getInputBucket();
+		final ItemStack result = FluidContainerRegistry.drainFluidContainer(itemStack);
+		if (result != null)
+		{
+			final int cap = FluidContainerRegistry.getContainerCapacity(tnk.getFluid(), itemStack);
+			if (cap != 0)
+			{
+				if (cap <= tnk.getAvailableCapacity())
+				{
+					final FluidStack fluidStack = FluidContainerRegistry.getFluidForFilledItem(itemStack);
+					if (tnk.getFluid() == null || tnk.getFluid().isFluidEqual(fluidStack))
+					{
+						if (mergeOutputBucket(result))
+						{
+							if (tnk.fill(fluidStack, true) > 0)
+							{
+								useInputBucket();
+							}
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			rejectInputBucket();
+		}
+	}
+
+	private boolean transferFluidContainers()
+	{
+		final ItemStack bucketInput = getInputBucket();
+		if (bucketInput != null)
+		{
+			bucketTime--;
+			if (bucketTime <= 0)
+			{
+				this.bucketTime = bucketTimeCap;
+				if (FluidContainerRegistry.isEmptyContainer(bucketInput))
+				{
+					if (isFluidTankFilled(0))
+					{
+						fillContainerFromTank(0);
+					}
+				}
+				else if (FluidContainerRegistry.isFilledContainer(bucketInput))
+				{
+					drainContainerToTank(0);
+				}
+				else
+				{
+					rejectInputBucket();
+				}
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/************
 	 * UPDATE
 	 ************/
+
+	private boolean updateBrewTime()
+	{
+		++this.time;
+		return time >= CellarRegistry.instance().brew().getBrewingTime(getFluidStack(0), this.invSlots[0]);
+	}
+
 	public void updateEntity()
 	{
 		super.updateEntity();
@@ -51,22 +196,25 @@ public class TileEntityBrewKettle extends TileEntity implements ISidedInventory,
 
 		if (!this.worldObj.isRemote)
 		{
+			transferFluidContainers();
+
 			if (this.canBrew())
 			{
-				++this.time;
-
-				if (this.time == CellarRegistry.instance().brew().getBrewingTime(getFluidStack(0), this.invSlots[0]))
+				if (updateBrewTime())
 				{
 					this.time = 0;
 					this.brewItem();
 				}
+				update = true;
 			}
 			else
 			{
-				this.time = 0;
+				if (this.time != 0)
+				{
+					this.time = 0;
+					update = true;
+				}
 			}
-
-			update = true;
 		}
 	}
 
@@ -116,14 +264,7 @@ public class TileEntityBrewKettle extends TileEntity implements ISidedInventory,
 
 			if (this.grainBool())
 			{
-				if (this.invSlots[1] == null)
-				{
-					this.invSlots[1] = GrowthCraftCellar.residue.copy();
-				}
-				else if (this.invSlots[1].isItemEqual(GrowthCraftCellar.residue))
-				{
-					this.invSlots[1].stackSize += GrowthCraftCellar.residue.stackSize;
-				}
+				this.invSlots[1] = ItemUtils.mergeStacks(this.invSlots[1], GrowthCraftCellar.residue);
 			}
 		}
 

@@ -22,6 +22,19 @@ public class Utils
 		if (flag) { System.out.println(msg); }
 	}
 
+	/**
+	 * Checks if num is between min and max, this is a exclusive between
+	 *
+	 * @param num - number to check
+	 * @param min - lower limit
+	 * @param max - upper limit
+	 * @return true if num is between min and max, false otherwise
+	 */
+	public static boolean between(int num, int min, int max)
+	{
+		return num >= min && num < max;
+	}
+
 	public static boolean isIDInList(int id, String list)
 	{
 		final String[] itemArray = list.split(";");

@@ -17,6 +17,51 @@ public class ItemUtils
 
 	private ItemUtils() {}
 
+	public static ItemStack consumeStack(ItemStack a, int amount)
+	{
+		a.stackSize -= amount;
+		if (a.stackSize <= 0)
+		{
+			return null;
+		}
+		return a;
+	}
+
+	public static ItemStack consumeStack(ItemStack a)
+	{
+		return consumeStack(a, 1);
+	}
+
+	public static ItemStack mergeStacks(ItemStack a, ItemStack b)
+	{
+		if (b != null)
+		{
+			if (a == null || a.stackSize == 0 || a.getItem() == null)
+			{
+				return b.copy();
+			}
+			else
+			{
+				if (a.isItemEqual(b))
+				{
+					if (a.isStackable())
+					{
+						final int size = b.stackSize;
+						if ((a.stackSize + size) <= b.getMaxStackSize())
+						{
+							a.stackSize += size;
+							if (a.stackSize > 0)
+							{
+								return a;
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Is this an amazing stick of waaaaaaat
 	 *

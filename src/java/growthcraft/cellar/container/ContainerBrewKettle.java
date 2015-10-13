@@ -1,5 +1,6 @@
 package growthcraft.cellar.container;
 
+import growthcraft.core.Utils;
 import growthcraft.api.cellar.CellarRegistry;
 import growthcraft.cellar.tileentity.TileEntityBrewKettle;
 
@@ -16,17 +17,27 @@ public class ContainerBrewKettle extends Container
 {
 	private TileEntityBrewKettle te;
 
+	public static class SlotId
+	{
+		public static final int RAW = 0;
+		public static final int RESIDUE = 1;
+		public static final int BUCKET_INPUT = 2;
+		public static final int BUCKET_OUTPUT = 3;
+		public static final int PLAYER_BACKPACK_START = 4;
+		public static final int PLAYER_BACKPACK_END = PLAYER_BACKPACK_START + 27;
+		public static final int PLAYER_INVENTORY_START = PLAYER_BACKPACK_END;
+		public static final int PLAYER_INVENTORY_END = PLAYER_INVENTORY_START + 9;
+
+		private SlotId() {}
+	}
+
 	public ContainerBrewKettle(InventoryPlayer player, TileEntityBrewKettle brewKettle)
 	{
-		// Slot Indexes:
-		//0            raw
-		//1            residue
-		//2 - 28 (29)  player.inv.backpack
-		//29 - 37 (38) player.inv.hotbar
-
 		this.te = brewKettle;
-		this.addSlotToContainer(new Slot(te, 0, 80, 35));
-		this.addSlotToContainer(new SlotBrewKettleResidue(this, te, 1, 141, 17));
+		this.addSlotToContainer(new Slot(te, SlotId.RAW, 80, 35));
+		this.addSlotToContainer(new SlotBrewKettleResidue(this, te, SlotId.RESIDUE, 141, 17));
+		this.addSlotToContainer(new Slot(te, SlotId.BUCKET_INPUT, 8, 17));
+		this.addSlotToContainer(new Slot(te, SlotId.BUCKET_OUTPUT, 8, 53));
 		int i;
 
 		for (i = 0; i < 3; ++i)
@@ -60,37 +71,44 @@ public class ContainerBrewKettle extends Container
 			final ItemStack stack = slot.getStack();
 			itemstack = stack.copy();
 
-			if (index == 1)
+			if (index == SlotId.RESIDUE)
 			{
-				if (!this.mergeItemStack(stack, 2, 38, true))
+				if (!this.mergeItemStack(stack, SlotId.PLAYER_BACKPACK_START, SlotId.PLAYER_INVENTORY_END, true))
 				{
 					return null;
 				}
 
 				slot.onSlotChange(stack, itemstack);
 			}
-			else if (index != 0)
+			else if (index == SlotId.RAW)
 			{
 				if (CellarRegistry.instance().brew().isItemBrewingIngredient(stack))
 				{
-					if (!this.mergeItemStack(stack, 0, 1, false))
+					if (!this.mergeItemStack(stack, SlotId.RAW, SlotId.RAW + 1, false))
 					{
 						return null;
 					}
 				}
-				else if (index >= 2 && index < 29)
-				{
-					if (!this.mergeItemStack(stack, 29, 38, false))
-					{
-						return null;
-					}
-				}
-				else if (index >= 29 && index < 38 && !this.mergeItemStack(stack, 2, 29, false))
+			}
+			else if (index == SlotId.BUCKET_INPUT)
+			{
+				if (!this.mergeItemStack(stack, SlotId.BUCKET_INPUT, SlotId.BUCKET_INPUT + 1, false))
 				{
 					return null;
 				}
 			}
-			else if (!this.mergeItemStack(stack, 2, 38, false))
+			else if (Utils.between(index, SlotId.PLAYER_BACKPACK_START, SlotId.PLAYER_BACKPACK_END))
+			{
+				if (!this.mergeItemStack(stack, SlotId.PLAYER_INVENTORY_START, SlotId.PLAYER_INVENTORY_END, false))
+				{
+					return null;
+				}
+			}
+			else if (Utils.between(index, SlotId.PLAYER_INVENTORY_START, SlotId.PLAYER_INVENTORY_END) && !this.mergeItemStack(stack, SlotId.PLAYER_BACKPACK_START, SlotId.PLAYER_BACKPACK_END, false))
+			{
+				return null;
+			}
+			else if (!this.mergeItemStack(stack, SlotId.PLAYER_BACKPACK_START, SlotId.PLAYER_INVENTORY_END, false))
 			{
 				return null;
 			}
@@ -129,7 +147,7 @@ public class ContainerBrewKettle extends Container
 		super.detectAndSendChanges();
 		for (int i = 0; i < crafters.size(); i++)
 		{
-			te.sendGUINetworkData(this, (ICrafting) crafters.get(i));
+			te.sendGUINetworkData(this, (ICrafting)crafters.get(i));
 		}
 	}
 

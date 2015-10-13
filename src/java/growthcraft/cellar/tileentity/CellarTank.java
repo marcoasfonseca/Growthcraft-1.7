@@ -10,4 +10,9 @@ public class CellarTank extends FluidTank
 		super(capacity);
 		this.tile = tile;
 	}
+
+	public int getAvailableCapacity()
+	{
+		return getCapacity() - getFluidAmount();
+	}
 }
