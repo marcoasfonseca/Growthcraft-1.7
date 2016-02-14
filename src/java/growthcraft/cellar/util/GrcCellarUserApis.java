@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 IceDragon200
+ * Copyright (c) 2015, 2016 IceDragon200
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,13 @@
  */
 package growthcraft.cellar.util;
 
+import javax.annotation.Nonnull;
+
 import growthcraft.api.cellar.brewing.user.UserBrewingRecipesConfig;
 import growthcraft.api.cellar.fermenting.user.UserFermentingRecipesConfig;
 import growthcraft.api.cellar.heatsource.user.UserHeatSourcesConfig;
 import growthcraft.api.cellar.pressing.user.UserPressingRecipesConfig;
-import growthcraft.api.cellar.yeast.user.UserYeastEntriesConfig;
+import growthcraft.api.cellar.culture.user.UserCultureEntriesConfig;
 import growthcraft.api.core.log.ILogger;
 import growthcraft.api.core.module.ModuleContainer;
 import growthcraft.core.common.GrcModuleBase;
@@ -38,7 +40,7 @@ public class GrcCellarUserApis extends GrcModuleBase
 	private UserFermentingRecipesConfig userFermentingRecipes;
 	private UserHeatSourcesConfig userHeatSources;
 	private UserPressingRecipesConfig userPressingRecipes;
-	private UserYeastEntriesConfig userYeastEntries;
+	private UserCultureEntriesConfig userYeastEntries;
 	private ModuleContainer modules;
 
 	public GrcCellarUserApis()
@@ -48,7 +50,7 @@ public class GrcCellarUserApis extends GrcModuleBase
 		this.userFermentingRecipes = new UserFermentingRecipesConfig();
 		this.userHeatSources = new UserHeatSourcesConfig();
 		this.userPressingRecipes = new UserPressingRecipesConfig();
-		this.userYeastEntries = new UserYeastEntriesConfig();
+		this.userYeastEntries = new UserCultureEntriesConfig();
 		modules.add(userBrewingRecipes);
 		modules.add(userFermentingRecipes);
 		modules.add(userHeatSources);
@@ -57,13 +59,13 @@ public class GrcCellarUserApis extends GrcModuleBase
 	}
 
 	@Override
-	public void setLogger(ILogger log)
+	public void setLogger(@Nonnull ILogger log)
 	{
 		super.setLogger(log);
 		modules.setLogger(log);
 	}
 
-	public UserYeastEntriesConfig getUserYeastEntries()
+	public UserCultureEntriesConfig getUserCultureEntries()
 	{
 		return this.userYeastEntries;
 	}

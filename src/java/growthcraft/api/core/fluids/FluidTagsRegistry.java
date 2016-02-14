@@ -21,27 +21,60 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package growthcraft.api.core;
+package growthcraft.api.core.fluids;
 
+import javax.annotation.Nullable;
 import javax.annotation.Nonnull;
 
-import growthcraft.api.core.effect.IPotionEffectFactory;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import growthcraft.api.core.common.DuplicateRegistrationError;
 import growthcraft.api.core.log.ILogger;
 import growthcraft.api.core.log.NullLogger;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.Fluid;
 
-public class PotionEffectFactoryRegistry extends AbstractClassRegistry<IPotionEffectFactory> implements IPotionEffectFactoryRegistry
+public class FluidTagsRegistry implements IFluidTagsRegistry
 {
 	private ILogger logger = NullLogger.INSTANCE;
+	private Map<String, FluidTag> nameToTag = new HashMap<String, FluidTag>();
 
+	@Override
 	public void setLogger(@Nonnull ILogger l)
 	{
 		this.logger = l;
 	}
 
-	public IPotionEffectFactory loadPotionEffectFactoryFromNBT(@Nonnull NBTTagCompound data, @Nonnull String name)
+	public void registerTag(@Nonnull FluidTag tag)
 	{
-		return loadObjectFromNBT(data, name);
+		if (nameToTag.containsKey(tag.getName()))
+		{
+			throw DuplicateRegistrationError.newFor(tag);
+		}
+		nameToTag.put(tag.getName(), tag);
+	}
+
+	public FluidTag createTag(@Nonnull String name)
+	{
+		final FluidTag tag = new FluidTag(name);
+		registerTag(tag);
+		return tag;
+	}
+
+	public Collection<String> getNames()
+	{
+		return nameToTag.keySet();
+	}
+
+	public Collection<FluidTag> getTags()
+	{
+		return nameToTag.values();
+	}
+
+	public FluidTag findTag(@Nonnull String name)
+	{
+		return nameToTag.get(name);
 	}
 }
