@@ -37,8 +37,8 @@ import growthcraft.api.cellar.heatsource.HeatSourceRegistry;
 import growthcraft.api.cellar.heatsource.IHeatSourceRegistry;
 import growthcraft.api.cellar.pressing.IPressingRegistry;
 import growthcraft.api.cellar.pressing.PressingRegistry;
-import growthcraft.api.cellar.yeast.IYeastRegistry;
-import growthcraft.api.cellar.yeast.YeastRegistry;
+import growthcraft.api.cellar.culture.ICultureRegistry;
+import growthcraft.api.cellar.culture.CultureRegistry;
 import growthcraft.api.core.log.ILoggable;
 import growthcraft.api.core.log.ILogger;
 import growthcraft.api.core.log.NullLogger;
@@ -53,7 +53,7 @@ public class CellarRegistry implements ILoggable
 	private final IFermentingRegistry fermentingRegistry = new FermentingRegistry();
 	private final IHeatSourceRegistry heatSourceRegistry = new HeatSourceRegistry();
 	private final IPressingRegistry pressingRegistry = new PressingRegistry();
-	private final IYeastRegistry yeastRegistry = new YeastRegistry();
+	private final ICultureRegistry cultureRegistry = new CultureRegistry();
 	private ILogger logger = NullLogger.INSTANCE;
 
 	/**
@@ -77,7 +77,7 @@ public class CellarRegistry implements ILoggable
 		fermentingRegistry.setLogger(logger);
 		heatSourceRegistry.setLogger(logger);
 		pressingRegistry.setLogger(logger);
-		yeastRegistry.setLogger(logger);
+		cultureRegistry.setLogger(logger);
 	}
 
 	/**
@@ -129,10 +129,10 @@ public class CellarRegistry implements ILoggable
 	}
 
 	/**
-	 * @return instance of the YeastRegistry
+	 * @return instance of the CultureRegistry
 	 */
-	public IYeastRegistry yeast()
+	public ICultureRegistry culture()
 	{
-		return yeastRegistry;
+		return cultureRegistry;
 	}
 }

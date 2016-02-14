@@ -21,13 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package growthcraft.api.cellar.yeast.user;
+package growthcraft.api.cellar.culture.user;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import growthcraft.api.cellar.CellarRegistry;
 import growthcraft.api.core.schema.ItemKeySchema;
+import growthcraft.api.core.schema.MultiFluidStackSchema;
 import growthcraft.api.core.util.BiomeUtils;
 import growthcraft.api.core.util.JsonConfigDef;
 
@@ -38,10 +40,10 @@ import net.minecraftforge.common.BiomeDictionary;
  * This allows users to define new yeast entries and map them to a biome
  * for generation in the Ferment Jar.
  */
-public class UserYeastEntriesConfig extends JsonConfigDef
+public class UserCultureEntriesConfig extends JsonConfigDef
 {
-	private final UserYeastEntries defaultEntries = new UserYeastEntries();
-	private UserYeastEntries entries;
+	private final UserCultureEntries defaultEntries = new UserCultureEntries();
+	private UserCultureEntries entries;
 
 	@Override
 	protected String getDefault()
@@ -55,13 +57,16 @@ public class UserYeastEntriesConfig extends JsonConfigDef
 		final ItemKeySchema etherealYeast = new ItemKeySchema("Growthcraft|Cellar", "grc.yeast", 1, 3);
 		etherealYeast.setComment("Ethereal Yeast");
 
-		final UserYeastEntry brewers = new UserYeastEntry(brewersYeast, new ArrayList<String>());
+		final MultiFluidStackSchema schema = MultiFluidStackSchema.newWithTags(40, "young");
+		schema.setComment("Any fluid tagged with `young`");
+
+		final UserCultureEntry brewers = new UserCultureEntry(brewersYeast, schema, new ArrayList<String>());
 		brewers.setComment("Brewers yeast is the default yeast, which appears in all other biomes that are filled by the Lager or Ethereal");
 
-		final UserYeastEntry lager = new UserYeastEntry(lagerYeast, new ArrayList<String>());
+		final UserCultureEntry lager = new UserCultureEntry(lagerYeast, schema, new ArrayList<String>());
 		lager.setComment("Lager yeast is found in COLD biomes, think snow places!");
 
-		final UserYeastEntry ethereal = new UserYeastEntry(etherealYeast, new ArrayList<String>());
+		final UserCultureEntry ethereal = new UserCultureEntry(etherealYeast, schema, new ArrayList<String>());
 		ethereal.setComment("Ethereal yeast is found in MAGICAL or MUSHROOM biomes, because its special");
 
 		for (BiomeDictionary.Type biomeType : BiomeDictionary.Type.values())
@@ -89,48 +94,57 @@ public class UserYeastEntriesConfig extends JsonConfigDef
 	@Override
 	protected void loadFromBuffer(BufferedReader reader)
 	{
-		this.entries = gson.fromJson(reader, UserYeastEntries.class);
+		this.entries = gson.fromJson(reader, UserCultureEntries.class);
 	}
 
-	private void addYeastEntry(UserYeastEntry entry)
+	private void addYeastEntry(UserCultureEntry entry)
 	{
 		if (entry == null)
 		{
-			logger.error("Yeast entry was invalid.");
+			logger.error("Culture entry was invalid.");
 			return;
 		}
 
 		if (entry.item == null || entry.item.isInvalid())
 		{
-			logger.error("Yeast item was invalid {%s}", entry);
+			logger.error("Culture item was invalid {%s}", entry);
+			return;
+		}
+
+		if (entry.fluids == null || entry.fluids.isInvalid())
+		{
+			logger.error("Culture fluids was invalid {%s}", entry);
 			return;
 		}
 
 		for (ItemStack itemstack : entry.item.getItemStacks())
 		{
-			if (entry.biome_types != null)
+			for (FluidStack fluidstack : entry.fluids.getFluidStacks())
 			{
-				for (String biome : entry.biome_types)
+				if (entry.biome_names != null)
 				{
-					try
+					for (String biomeName : entry.biome_names)
 					{
-						final BiomeDictionary.Type biomeType = BiomeUtils.fetchBiomeType(biome);
-						CellarRegistry.instance().yeast().addYeastToBiomeType(itemstack, biomeType);
-						logger.info("Added user yeast {%s} to biome type '%s'", itemstack, biome);
-					}
-					catch (BiomeUtils.BiomeTypeNotFound ex)
-					{
-						logger.error("A biome type '%s' for entry {%s} could not be found.", biome, entry);
+						CellarRegistry.instance().culture().addCultureRecipeToBiomeByName(itemstack, fluidstack, biomeName);
+						logger.info("Added user culture {%s} to biome '%s' with fluid {%s}", itemstack, biomeName, fluidstack);
 					}
 				}
-			}
 
-			if (entry.biome_names != null)
-			{
-				for (String biomeName : entry.biome_names)
+				if (entry.biome_types != null)
 				{
-					CellarRegistry.instance().yeast().addYeastToBiomeByName(itemstack, biomeName);
-					logger.info("Added user yeast {%s} to biome '%s'", itemstack, biomeName);
+					for (String biome : entry.biome_types)
+					{
+						try
+						{
+							final BiomeDictionary.Type biomeType = BiomeUtils.fetchBiomeType(biome);
+							CellarRegistry.instance().culture().addCultureRecipeToBiomeType(itemstack, fluidstack, biomeType);
+							logger.info("Added user culture {%s} to biome type '%s' with fluid {%s}", itemstack, biome, fluidstack);
+						}
+						catch (BiomeUtils.BiomeTypeNotFound ex)
+						{
+							logger.error("A biome type '%s' for entry {%s} could not be found.", biome, entry);
+						}
+					}
 				}
 			}
 		}
@@ -143,12 +157,12 @@ public class UserYeastEntriesConfig extends JsonConfigDef
 		{
 			if (entries.data != null)
 			{
-				logger.info("Adding %d yeast entries.", entries.data.size());
-				for (UserYeastEntry entry : entries.data) addYeastEntry(entry);
+				logger.info("Adding %d culture entries.", entries.data.size());
+				for (UserCultureEntry entry : entries.data) addYeastEntry(entry);
 			}
 			else
 			{
-				logger.error("Invalid yeast entries data");
+				logger.error("Invalid culture entries data");
 			}
 		}
 	}

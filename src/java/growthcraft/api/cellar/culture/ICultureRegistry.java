@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 IceDragon200
+ * Copyright (c) 2015, 2016 IceDragon200
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package growthcraft.api.cellar.yeast;
+package growthcraft.api.cellar.culture;
 
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,32 +33,33 @@ import growthcraft.api.core.log.ILoggable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.fluids.FluidStack;
 
-public interface IYeastRegistry extends ILoggable
+public interface ICultureRegistry extends ILoggable
 {
 	/**
 	 * Adds the given ItemStack as a possible yeast item
 	 *
 	 * @param yeast - an item
 	 */
-	void addYeast(@Nonnull ItemStack yeast);
+	void addCulture(@Nonnull ItemStack yeast);
 
 	/**
 	 * @param yeast - an item
 	 * @return true, if the item is a known yeast item, false otherwise.
 	 */
-	boolean isYeast(@Nullable ItemStack yeast);
+	boolean isCulture(@Nullable ItemStack yeast);
 
 	/**
 	 * Maps the given biome type to the yeast item, when a Culture Jar
 	 * is placed into a biome of that type, it MAY produce the yeast item.
-	 * NOTE. This method SHOULD use addYeast to add the given yeast item to the
+	 * NOTE. This method SHOULD use addCulture to add the given yeast item to the
 	 *       known list.
 	 *
 	 * @param yeast - an item
 	 * @param type - the biome type to add
 	 */
-	void addYeastToBiomeType(@Nonnull ItemStack yeast, @Nonnull BiomeDictionary.Type type);
+	void addCultureToBiomeType(@Nonnull ItemStack yeast, @Nonnull BiomeDictionary.Type type);
 
 	/**
 	 * Maps the given biome name to the yeast item.
@@ -67,7 +69,12 @@ public interface IYeastRegistry extends ILoggable
 	 * @param yeast - an item
 	 * @param name - biome name
 	 */
-	void addYeastToBiomeByName(@Nonnull ItemStack yeast, @Nonnull String name);
+	void addCultureToBiomeByName(@Nonnull ItemStack yeast, @Nonnull String name);
+
+	void addCultureRecipeToBiomeType(@Nonnull ICultureRecipe recipe, @Nonnull BiomeDictionary.Type type);
+	void addCultureRecipeToBiomeByName(@Nonnull ICultureRecipe recipe, @Nonnull String name);
+	List<ICultureRecipe> getCultureRecipesForBiomeType(@Nonnull BiomeDictionary.Type type, @Nullable FluidStack stack);
+	List<ICultureRecipe> getCultureRecipesForBiomeByName(@Nonnull String name, @Nullable FluidStack stack);
 
 	/**
 	 * Returns a Set of Items that may appear in this biome type
@@ -75,10 +82,10 @@ public interface IYeastRegistry extends ILoggable
 	 * @param type - the biome type
 	 * @return yeast for the biome type,
 	 */
-	Set<ItemStack> getYeastListForBiomeType(@Nonnull BiomeDictionary.Type type);
-	Set<ItemStack> getYeastListForBiomeName(@Nonnull String name);
+	Set<ItemStack> getCultureListForBiomeType(@Nonnull BiomeDictionary.Type type);
+	Set<ItemStack> getCultureListForBiomeName(@Nonnull String name);
 
-	Set<String> getBiomeNamesForYeast(@Nullable ItemStack yeast);
-	Set<BiomeDictionary.Type> getBiomeTypesForYeast(@Nullable ItemStack yeast);
-	boolean canYeastFormInBiome(@Nullable ItemStack yeast, @Nullable BiomeGenBase biome);
+	Set<String> getBiomeNamesForCulture(@Nullable ItemStack yeast);
+	Set<BiomeDictionary.Type> getBiomeTypesForCulture(@Nullable ItemStack yeast);
+	boolean canCultureFormInBiome(@Nullable ItemStack yeast, @Nullable BiomeGenBase biome);
 }

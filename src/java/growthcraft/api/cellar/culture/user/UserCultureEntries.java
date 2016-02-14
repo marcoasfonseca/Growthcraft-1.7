@@ -21,17 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package growthcraft.api.cellar.yeast.user;
+package growthcraft.api.cellar.culture.user;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import growthcraft.api.core.schema.ICommentable;
 
-public class UserYeastEntries implements ICommentable
+public class UserCultureEntries implements ICommentable
 {
 	public String comment = "";
-	public List<UserYeastEntry> data = new ArrayList<UserYeastEntry>();
+	public List<UserCultureEntry> data = new ArrayList<UserCultureEntry>();
 
 	@Override
 	public String getComment()

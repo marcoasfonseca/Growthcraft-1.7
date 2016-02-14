@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 IceDragon200
+ * Copyright (c) 2015, 2016 IceDragon200
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package growthcraft.api.cellar.yeast.user;
+package growthcraft.api.cellar.culture.user;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,32 +29,35 @@ import javax.annotation.Nonnull;
 
 import growthcraft.api.core.schema.ICommentable;
 import growthcraft.api.core.schema.ItemKeySchema;
+import growthcraft.api.core.schema.MultiFluidStackSchema;
 
-public class UserYeastEntry implements ICommentable
+public class UserCultureEntry implements ICommentable
 {
 	public String comment = "";
 	public ItemKeySchema item;
+	public MultiFluidStackSchema fluids;
 	public List<String> biome_types;
 	public List<String> biome_names;
 
-	public UserYeastEntry(@Nonnull ItemKeySchema i, @Nonnull List<String> biomeTypes, @Nonnull List<String> biomeNames)
+	public UserCultureEntry(@Nonnull ItemKeySchema i, @Nonnull MultiFluidStackSchema flus, @Nonnull List<String> biomeTypes, @Nonnull List<String> biomeNames)
 	{
 		this.item = i;
+		this.fluids = flus;
 		this.biome_types = biomeTypes;
 		this.biome_names = biomeNames;
 	}
 
-	public UserYeastEntry(@Nonnull ItemKeySchema i, @Nonnull List<String> biomeTypes)
+	public UserCultureEntry(@Nonnull ItemKeySchema i, @Nonnull MultiFluidStackSchema flus, @Nonnull List<String> biomeTypes)
 	{
-		this(i, biomeTypes, new ArrayList<String>());
+		this(i, flus, biomeTypes, new ArrayList<String>());
 	}
 
-	public UserYeastEntry() {}
+	public UserCultureEntry() {}
 
 	@Override
 	public String toString()
 	{
-		return String.format("UserYeastEntry(item: `%s`, biome_types: [%s], biome_names: [%s])", item, biome_types, biome_names);
+		return String.format("UserCultureEntry(item: `%s`, fluids: [%s], biome_types: [%s], biome_names: [%s])", item, fluids, biome_types, biome_names);
 	}
 
 	@Override

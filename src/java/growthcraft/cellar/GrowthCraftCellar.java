@@ -145,7 +145,7 @@ public class GrowthCraftCellar
 		userApis.getUserFermentingRecipes().setConfigFile(event.getModConfigurationDirectory(), "growthcraft/cellar/fermenting.json");
 		userApis.getUserHeatSources().setConfigFile(event.getModConfigurationDirectory(), "growthcraft/cellar/heatsources.json");
 		userApis.getUserPressingRecipes().setConfigFile(event.getModConfigurationDirectory(), "growthcraft/cellar/pressing.json");
-		userApis.getUserYeastEntries().setConfigFile(event.getModConfigurationDirectory(), "growthcraft/cellar/yeast.json");
+		userApis.getUserCultureEntries().setConfigFile(event.getModConfigurationDirectory(), "growthcraft/cellar/culture.json");
 
 		registerBoozeModifierFunctions();
 		boozeBuilderFactory = new CellarBoozeBuilderFactory(userApis);
